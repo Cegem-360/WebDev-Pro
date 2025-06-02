@@ -7,6 +7,15 @@
     "Recurring Pay": "Ismétlődő Kifizetés",
     "Income": "Bevétel",
     "Expense": "Kiadás",
+    "Expenses": "Kiadások",
     "Savings": "Megtakarítás",
-    "Investment": "Befektetés"
+    "Investment": "Befektetés",
+    "Dátum": "Dátum",
+    "Típus": "Típus",
+    "Bevétel": "Bevétel",
+    "Kiadás": "Kiadás",
+    "Leírás": "Leírás",
+    "Kategória": "Kategória",
+    "Összeg": "Összeg",
+    "Státusz": "Státusz"
 }

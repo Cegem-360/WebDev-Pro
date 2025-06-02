@@ -26,7 +26,7 @@ final class Expense extends Model
         return [
             'payment_type' => PaymentTypes::class,
             'status' => PaymentStatuses::class,
-            'date' => 'date:Y-m-d',
+            'payment_date' => 'date:Y-m-d',
         ];
     }
 }

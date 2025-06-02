@@ -24,7 +24,7 @@ final class ExpenseFactory extends Factory
     {
         return [
             'category_id' => Category::factory(),
-            'date' => $this->faker->date(),
+            'payment_date' => $this->faker->date(),
             'description' => $this->faker->sentence(),
             'amount' => $this->faker->numberBetween(1000, 900000),
             'payment_type' => $this->faker->randomElement(PaymentTypes::class),

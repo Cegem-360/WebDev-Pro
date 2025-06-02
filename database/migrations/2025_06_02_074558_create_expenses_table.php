@@ -19,7 +19,7 @@ return new class extends Migration
         Schema::create('expenses', function (Blueprint $table): void {
             $table->id();
             $table->foreignIdFor(Category::class)->nullable()->cascadeOnUpdate()->nullOnDelete();
-            $table->date('date');
+            $table->date('payment_date');
             $table->text('description');
             $table->integer('amount');
             $table->enum('payment_type', array_column(PaymentTypes::cases(), 'value'))

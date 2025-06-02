@@ -36,7 +36,7 @@ final class ExpenseResource extends Resource
             ->schema([
                 Select::make('category_id')
                     ->relationship('category', 'name'),
-                DatePicker::make('date')
+                DatePicker::make('payment_date')
                     ->required(),
                 Textarea::make('description')
                     ->required()
@@ -61,7 +61,7 @@ final class ExpenseResource extends Resource
                 TextColumn::make('category.name')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('date')
+                TextColumn::make('payment_date')
                     ->date('Y-m-d')
                     ->sortable(),
                 TextColumn::make('amount')
