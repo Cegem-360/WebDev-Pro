@@ -1,0 +1,12 @@
+{
+    "Draft": "Tervezet",
+    "Pending": "Függőben",
+    "Invoiced": "Számlázott",
+    "Paid": "Fizetett",
+    "Single Pay": "Egyszeri Kifizetés",
+    "Recurring Pay": "Ismétlődő Kifizetés",
+    "Income": "Bevétel",
+    "Expense": "Kiadás",
+    "Savings": "Megtakarítás",
+    "Investment": "Befektetés"
+}
