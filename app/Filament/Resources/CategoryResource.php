@@ -34,7 +34,7 @@ final class CategoryResource extends Resource
                 TextInput::make('name')
                     ->required(),
                 Select::make('budget_item_type')
-                    ->options(BudgetItemTypes::cases())
+                    ->options(BudgetItemTypes::class)
                     ->required(),
             ]);
     }

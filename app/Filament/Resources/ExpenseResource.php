@@ -62,7 +62,7 @@ final class ExpenseResource extends Resource
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('date')
-                    ->date()
+                    ->date('Y-m-d')
                     ->sortable(),
                 TextColumn::make('amount')
                     ->numeric()
@@ -105,7 +105,7 @@ final class ExpenseResource extends Resource
     {
         return [
             'index' => ListExpenses::route('/'),
-            'create' => CreateExpense::route('/create'),
+            /* 'create' => CreateExpense::route('/create'), */
             'view' => ViewExpense::route('/{record}'),
             'edit' => EditExpense::route('/{record}/edit'),
         ];

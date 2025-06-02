@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\PaymentStatuses;
+use App\Enums\PaymentTypes;
+use App\Models\Category;
 use App\Models\Expense;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,7 +23,12 @@ final class ExpenseFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'category_id' => Category::factory(),
+            'date' => $this->faker->date(),
+            'description' => $this->faker->sentence(),
+            'amount' => $this->faker->numberBetween(1000, 900000),
+            'payment_type' => $this->faker->randomElement(PaymentTypes::class),
+            'status' => $this->faker->randomElement(PaymentStatuses::class),
         ];
     }
 }

@@ -62,7 +62,7 @@ final class IncomeResource extends Resource
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('date')
-                    ->date()
+                    ->date('Y-m-d')
                     ->sortable(),
                 TextColumn::make('amount')
                     ->numeric()
@@ -103,7 +103,7 @@ final class IncomeResource extends Resource
     {
         return [
             'index' => ListIncomes::route('/'),
-            'create' => CreateIncome::route('/create'),
+            /* 'create' => CreateIncome::route('/create'), */
             'view' => ViewIncome::route('/{record}'),
             'edit' => EditIncome::route('/{record}/edit'),
         ];

@@ -19,8 +19,8 @@ enum PaymentTypes: string implements HasLabel
     public function getLabel(): ?string
     {
         return match ($this) {
-            self::SINGLE => 'Single Pay',
-            self::RECURRING => 'Recurring Pay',
+            self::SINGLE => __('Single Pay'),
+            self::RECURRING => __('Recurring Pay'),
         };
     }
 }

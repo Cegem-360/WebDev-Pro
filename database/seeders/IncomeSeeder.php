@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\Category;
+use App\Models\Income;
 use Illuminate\Database\Seeder;
 
 final class IncomeSeeder extends Seeder
@@ -13,6 +15,6 @@ final class IncomeSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        Income::factory()->count(10)->recycle(Category::factory()->create())->create();
     }
 }

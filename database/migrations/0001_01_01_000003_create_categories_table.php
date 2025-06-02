@@ -16,7 +16,7 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table): void {
             $table->id();
-            $table->string('name')->unique()->comment('The name of the category');
+            $table->string('name')->comment('The name of the category');
             $table->enum('budget_item_type', array_column(BudgetItemTypes::cases(), 'value'))->nullable()->comment('The type of budget item for this category');
             $table->timestamps();
         });
