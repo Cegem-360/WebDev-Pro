@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\CategoryResource\Pages;
 
-use Filament\Actions\ViewAction;
-use Filament\Actions\DeleteAction;
 use App\Filament\Resources\CategoryResource;
-use Filament\Actions;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
 final class EditCategory extends EditRecord

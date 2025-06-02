@@ -4,25 +4,24 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
-use Filament\Forms\Components\Select;
+use App\Enums\PaymentStatuses;
+use App\Enums\PaymentTypes;
+use App\Filament\Resources\IncomeResource\Pages\CreateIncome;
+use App\Filament\Resources\IncomeResource\Pages\EditIncome;
+use App\Filament\Resources\IncomeResource\Pages\ListIncomes;
+use App\Filament\Resources\IncomeResource\Pages\ViewIncome;
+use App\Models\Income;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Actions\ViewAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteBulkAction;
-use App\Filament\Resources\IncomeResource\Pages\ListIncomes;
-use App\Filament\Resources\IncomeResource\Pages\CreateIncome;
-use App\Filament\Resources\IncomeResource\Pages\ViewIncome;
-use App\Filament\Resources\IncomeResource\Pages\EditIncome;
-use App\Filament\Resources\IncomeResource\Pages;
-use App\Models\Income;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 final class IncomeResource extends Resource
@@ -45,7 +44,12 @@ final class IncomeResource extends Resource
                 TextInput::make('amount')
                     ->required()
                     ->numeric(),
-                TextInput::make('status')
+                Select::make('payment_type')
+                    ->options(PaymentTypes::class)
+                    ->required(),
+                Select::make('status')
+                    ->options(PaymentStatuses::class)
+                    ->enum(PaymentStatuses::class)
                     ->required(),
             ]);
     }

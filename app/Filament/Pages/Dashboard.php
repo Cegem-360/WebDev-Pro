@@ -13,14 +13,14 @@ use Illuminate\Contracts\Support\Htmlable;
 
 final class Dashboard extends Page
 {
-    private static string $routePath = '/';
-
     protected static ?int $navigationSort = -2;
 
     /**
      * @var view-string
      */
     protected static string $view = 'filament.pages.dashboard';
+
+    private static string $routePath = '/';
 
     public static function getNavigationLabel(): string
     {

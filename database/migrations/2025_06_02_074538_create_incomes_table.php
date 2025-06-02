@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\PaymentStatuses;
+use App\Enums\PaymentTypes;
 use App\Models\Category;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -21,7 +22,12 @@ return new class extends Migration
             $table->date('date');
             $table->text('description');
             $table->integer('amount');
+            $table->enum('payment_type', array_column(PaymentTypes::cases(), 'value'))
+                ->nullable(false)
+                ->default(PaymentTypes::SINGLE->value)
+                ->comment('The payment type for the income, e.g., single or recurring');
             $table->enum('status', array_column(PaymentStatuses::cases(), 'value'))
+                ->nullable(false)
                 ->default(PaymentStatuses::DRAFT->value)
                 ->comment('The status of the income, e.g., draft, pending, invoiced, paid');
             $table->timestamps();

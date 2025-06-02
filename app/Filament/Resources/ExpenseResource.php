@@ -4,25 +4,24 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
-use Filament\Forms\Components\Select;
+use App\Enums\PaymentStatuses;
+use App\Enums\PaymentTypes;
+use App\Filament\Resources\ExpenseResource\Pages\CreateExpense;
+use App\Filament\Resources\ExpenseResource\Pages\EditExpense;
+use App\Filament\Resources\ExpenseResource\Pages\ListExpenses;
+use App\Filament\Resources\ExpenseResource\Pages\ViewExpense;
+use App\Models\Expense;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Actions\ViewAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteBulkAction;
-use App\Filament\Resources\ExpenseResource\Pages\ListExpenses;
-use App\Filament\Resources\ExpenseResource\Pages\CreateExpense;
-use App\Filament\Resources\ExpenseResource\Pages\ViewExpense;
-use App\Filament\Resources\ExpenseResource\Pages\EditExpense;
-use App\Filament\Resources\ExpenseResource\Pages;
-use App\Models\Expense;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 final class ExpenseResource extends Resource
@@ -45,9 +44,12 @@ final class ExpenseResource extends Resource
                 TextInput::make('amount')
                     ->required()
                     ->numeric(),
-                TextInput::make('payment_type')
+                Select::make('payment_type')
+                    ->options(PaymentTypes::class)
                     ->required(),
-                TextInput::make('status')
+                Select::make('status')
+                    ->options(PaymentStatuses::class)
+                    ->enum(PaymentStatuses::class)
                     ->required(),
             ]);
     }

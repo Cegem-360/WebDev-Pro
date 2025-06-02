@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
-use Filament\Forms\Components\TextInput;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Actions\ViewAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteBulkAction;
+use App\Enums\BudgetItemTypes;
+use App\Filament\Resources\CategoryResource\Pages;
+use App\Filament\Resources\CategoryResource\Pages\EditCategory;
 use App\Filament\Resources\CategoryResource\Pages\ListCategories;
 use App\Filament\Resources\CategoryResource\Pages\ViewCategory;
-use App\Filament\Resources\CategoryResource\Pages\EditCategory;
-use App\Filament\Resources\CategoryResource\Pages;
 use App\Models\Category;
-use Filament\Forms;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 final class CategoryResource extends Resource
@@ -33,7 +33,9 @@ final class CategoryResource extends Resource
             ->schema([
                 TextInput::make('name')
                     ->required(),
-                TextInput::make('budget_item_type'),
+                Select::make('budget_item_type')
+                    ->options(BudgetItemTypes::cases())
+                    ->required(),
             ]);
     }
 
@@ -44,6 +46,13 @@ final class CategoryResource extends Resource
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('budget_item_type')
+                    ->badge()
+                    ->color(fn (Category $record): string => match ($record->budget_item_type) {
+                        BudgetItemTypes::INCOME => 'success',
+                        BudgetItemTypes::EXPENSE => 'danger',
+                        BudgetItemTypes::SAVINGS => 'warning',
+                        BudgetItemTypes::INVESTMENT => 'primary',
+                    })
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
