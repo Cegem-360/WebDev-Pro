@@ -15,6 +15,6 @@ final class ExpenseSeeder extends Seeder
      */
     public function run(): void
     {
-        Expense::factory()->count(10)->recycle(Category::factory()->create())->create();
+        Expense::factory()->count(10)->recycle(Category::factory()->create())->create(['payment_date' => now()]);
     }
 }

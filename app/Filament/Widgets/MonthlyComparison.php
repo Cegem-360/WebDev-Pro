@@ -4,60 +4,52 @@ declare(strict_types=1);
 
 namespace App\Filament\Widgets;
 
-use App\Enums\PaymentStatuses;
 use App\Models\Expense;
 use App\Models\Income;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Number;
 
 final class MonthlyComparison extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
-        $currentMonth = Carbon::now()->startOfMonth();
-        $lastMonth = Carbon::now()->subMonth()->startOfMonth();
-        $lastMonthEnd = Carbon::now()->subMonth()->endOfMonth();
+        $currentMonthStart = Carbon::now()->copy()->startOfMonth();
+        $lastMonth = Carbon::now()->copy()->subMonth()->startOfMonth();
+        $lastMonthEnd = $lastMonth->copy()->endOfMonth();
 
         // Current month data
-        $currentMonthIncome = Income::query()
-            ->wherePaymentDate('>=', $currentMonth)
-            ->whereStatus(PaymentStatuses::PAID)
-            ->sum('amount');
+        $currentMonthIncome = Income::getDateBetweenIncome($currentMonthStart, $currentMonthStart->copy()->endOfMonth());
 
-        $currentMonthExpense = Expense::query()
-            ->wherePaymentDate('>=', $currentMonth)->whereMonth('payment_date', '=', $currentMonth)
-            ->whereStatus(PaymentStatuses::PAID)
-            ->sum('amount');
+        $currentMonthExpense = Expense::getDateBetweenExpense($currentMonthStart, $currentMonthStart->copy()->endOfMonth());
 
         // Previous month data
-        $lastMonthIncome = Income::query()
-            ->wherePaymentDate('>=', $lastMonth)
-            ->wherePaymentDate('<=', $lastMonthEnd)
-            ->whereStatus(PaymentStatuses::PAID)
-            ->sum('amount');
+        $lastMonthIncome = Income::getDateBetweenIncome($lastMonth, $lastMonthEnd);
+        $lastMonthExpense = Expense::getDateBetweenExpense($lastMonth, $lastMonthEnd);
 
-        $lastMonthExpense = Expense::query()
-            ->wherePaymentDate('>=', $lastMonth)
-            ->wherePaymentDate('<=', $lastMonthEnd)
-            ->whereStatus(PaymentStatuses::PAID)
-            ->sum('amount');
+        // Calculate percentage changes with better handling of edge cases
+        $incomeChange = 0;
+        if ($lastMonthIncome > 0) {
+            $incomeChange = round((($currentMonthIncome - $lastMonthIncome) / $lastMonthIncome) * 100, 0);
+        } elseif ($currentMonthIncome > 0) {
+            $incomeChange = 100; // New income when there was none before
+        }
 
-        // Calculate differences
-        $incomeChange = $lastMonthIncome > 0
-            ? round((($currentMonthIncome - $lastMonthIncome) / $lastMonthIncome) * 100, 1)
-            : 0;
-
-        $expenseChange = $lastMonthExpense > 0
-            ? round((($currentMonthExpense - $lastMonthExpense) / $lastMonthExpense) * 100, 1)
-            : 0;
+        $expenseChange = 0;
+        if ($lastMonthExpense > 0) {
+            $expenseChange = round((($currentMonthExpense - $lastMonthExpense) / $lastMonthExpense) * 100, 0);
+        } elseif ($currentMonthExpense > 0) {
+            $expenseChange = 100; // New expenses when there were none before
+        }
 
         // Calculate colors based on financial perspective
         $incomeColor = $incomeChange >= 0 ? 'success' : 'danger';
         $expenseColor = $expenseChange <= 0 ? 'success' : 'danger';
+        dump($currentMonthExpense);
 
         return [
-            Stat::make(__('Bevételek változása'), number_format($currentMonthIncome, 0, '.', ' ').' Ft')
+            Stat::make(__('Bevételek változása'), Number::currency($currentMonthIncome, 'HUF', 'hu', 0))
                 ->description($incomeChange >= 0
                     ? __(':percent% növekedés az előző hónaphoz képest', ['percent' => abs($incomeChange)])
                     : __(':percent% csökkenés az előző hónaphoz képest', ['percent' => abs($incomeChange)])
@@ -69,7 +61,7 @@ final class MonthlyComparison extends StatsOverviewWidget
                     $currentMonthIncome / 1000,
                 ]),
 
-            Stat::make(__('Kiadások változása'), number_format($currentMonthExpense, 0, '.', ' ').' Ft')
+            Stat::make(__('Kiadások változása'), Number::currency($currentMonthExpense, 'HUF', 'hu', 0))
                 ->description($expenseChange <= 0
                     ? __(':percent% csökkenés az előző hónaphoz képest', ['percent' => abs($expenseChange)])
                     : __(':percent% növekedés az előző hónaphoz képest', ['percent' => abs($expenseChange)])
@@ -81,7 +73,7 @@ final class MonthlyComparison extends StatsOverviewWidget
                     $currentMonthExpense / 1000,
                 ]),
 
-            Stat::make(__('Megtakarítás'), number_format($currentMonthIncome - $currentMonthExpense, 0, '.', ' ').' Ft')
+            Stat::make(__('Megtakarítás'), Number::currency($currentMonthIncome - $currentMonthExpense, 'HUF', 'hu', 0))
                 ->description(Carbon::now()->translatedFormat('F'))
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color(($currentMonthIncome - $currentMonthExpense) >= 0 ? 'success' : 'danger'),

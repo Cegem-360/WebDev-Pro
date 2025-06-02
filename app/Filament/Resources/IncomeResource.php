@@ -30,24 +30,36 @@ final class IncomeResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $modelLabel = 'Bevétel';
+
+    protected static ?string $pluralModelLabel = 'Bevételek';
+
+    protected static ?string $navigationLabel = 'Bevételek';
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Select::make('category_id')
-                    ->relationship('category', 'name'),
+                    ->relationship('category', 'name')
+                    ->label('Kategória'),
                 DatePicker::make('payment_date')
+                    ->label('Befizetés dátuma')
                     ->required(),
                 Textarea::make('description')
+                    ->label('Leírás')
                     ->required()
                     ->columnSpanFull(),
                 TextInput::make('amount')
+                    ->label('Összeg')
                     ->required()
                     ->numeric(),
                 Select::make('payment_type')
+                    ->label('Fizetési mód')
                     ->options(PaymentTypes::class)
                     ->required(),
                 Select::make('status')
+                    ->label('Állapot')
                     ->options(PaymentStatuses::class)
                     ->enum(PaymentStatuses::class)
                     ->required(),
@@ -59,22 +71,28 @@ final class IncomeResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('category.name')
+                    ->label('Kategória')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('payment_date')
-                    ->date('Y-m-d')
+                    ->label('Befizetés dátuma')
+                    ->date('Y. m. d.')
                     ->sortable(),
                 TextColumn::make('amount')
+                    ->label('Összeg')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('status')
+                    ->label('Állapot')
                     ->searchable(),
                 TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Létrehozva')
+                    ->dateTime('Y. m. d. H:i:s')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->label('Frissítve')
+                    ->dateTime('Y. m. d. H:i:s')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

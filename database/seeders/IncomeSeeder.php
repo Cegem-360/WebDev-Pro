@@ -15,6 +15,6 @@ final class IncomeSeeder extends Seeder
      */
     public function run(): void
     {
-        Income::factory()->count(10)->recycle(Category::factory()->create())->create();
+        Income::factory()->count(10)->recycle(Category::factory()->create())->create(['payment_date' => now()]);
     }
 }

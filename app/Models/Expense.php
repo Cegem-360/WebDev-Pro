@@ -16,6 +16,22 @@ final class Expense extends Model
     /** @use HasFactory<ExpenseFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'category_id',
+        'payment_date',
+        'description',
+        'amount',
+        'payment_type',
+        'status',
+    ];
+
+    public static function getDateBetweenExpense($startDate, $endDate)
+    {
+        return (int) (self::whereBetween('payment_date', [$startDate, $endDate])
+            ->whereStatus(PaymentStatuses::PAID)
+            ->sum('amount'));
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
@@ -24,6 +40,7 @@ final class Expense extends Model
     protected function casts(): array
     {
         return [
+            'amount' => 'integer',
             'payment_type' => PaymentTypes::class,
             'status' => PaymentStatuses::class,
             'payment_date' => 'date:Y-m-d',

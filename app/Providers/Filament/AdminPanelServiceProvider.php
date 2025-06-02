@@ -31,6 +31,7 @@ final class AdminPanelServiceProvider extends PanelProvider
             ->path('admin')
             ->authGuard('web')
             ->login(Login::class)
+            ->darkMode()
             ->registration()
             ->passwordReset()
             ->emailVerification()

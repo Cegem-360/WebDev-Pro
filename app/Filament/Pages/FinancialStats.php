@@ -36,66 +36,58 @@ final class FinancialStats extends Page
         return __('Pénzügyi Statisztikák');
     }
 
-    public function getMonthlyIncome(): int
+    public function getMonthlyIncome()
     {
         $currentMonth = Carbon::now()->startOfMonth();
 
-        return Income::query()
-            ->whereMonth('payment_date', '=', $currentMonth)
-            ->whereStatus(PaymentStatuses::PAID)
-            ->sum('amount');
+        return Income::getDateBetweenIncome($currentMonth, $currentMonth->copy()->endOfMonth());
     }
 
-    public function getMonthlyExpense(): int
+    public function getMonthlyExpense()
     {
         $currentMonth = Carbon::now()->startOfMonth();
 
-        return Expense::query()
-            ->whereMonth('payment_date', '=', $currentMonth)
-            ->whereStatus(PaymentStatuses::PAID)
-            ->sum('amount');
+        return Expense::getDateBetweenExpense($currentMonth, $currentMonth->copy()->endOfMonth());
     }
 
-    public function getYearlyIncome(): int
+    public function getYearlyIncome()
     {
         $currentYear = Carbon::now()->startOfYear();
 
-        return Income::query()
-            ->whereYear('payment_date', '=', $currentYear)
-            ->whereStatus(PaymentStatuses::PAID)
-            ->sum('amount');
+        return Income::getDateBetweenIncome($currentYear, $currentYear->copy()->endOfYear());
     }
 
-    public function getYearlyExpense(): int
+    public function getYearlyExpense()
     {
         $currentYear = Carbon::now()->startOfYear();
 
-        return Expense::query()
-            ->whereYear('payment_date', '=', $currentYear)
-            ->whereStatus(PaymentStatuses::PAID)
-            ->sum('amount');
+        return Expense::getDateBetweenExpense($currentYear, $currentYear->copy()->endOfYear());
     }
 
     public function getMonthlyIncomesByCategory(): Collection
     {
-        $currentMonth = Carbon::now()->startOfMonth();
+        $currentMonth = Carbon::now()->copy()->startOfMonth();
 
         return Income::query()
-            ->whereMonth('payment_date', '=', $currentMonth)
+            ->whereBetween('payment_date', [$currentMonth, $currentMonth->copy()->endOfMonth()])
             ->whereStatus(PaymentStatuses::PAID)
-            ->groupBy('categories')
+            ->with(['category' => function ($query) {
+                return $query->groupBy('name');
+            }])
             ->orderBy('amount', 'desc')
             ->get();
     }
 
     public function getMonthlyExpensesByCategory(): Collection
     {
-        $currentMonth = Carbon::now()->startOfMonth();
+        $currentMonth = Carbon::now()->copy()->startOfMonth();
 
         return Expense::query()
-            ->whereMonth('payment_date', '=', $currentMonth)
+            ->whereBetween('payment_date', [$currentMonth, $currentMonth->copy()->endOfMonth()])
             ->whereStatus(PaymentStatuses::PAID)
-            ->groupBy('categories')
+            ->with(['category' => function ($query) {
+                return $query->groupBy('name');
+            }])
             ->orderBy('amount', 'desc')
             ->get();
     }
@@ -112,20 +104,15 @@ final class FinancialStats extends Page
             $endOfMonth = $month->copy()->endOfMonth();
             $monthName = $month->translatedFormat('F');
 
-            $monthlyIncome = Income::query()
-                ->whereBetween('payment_date', [$startOfMonth, $endOfMonth])
-                ->whereStatus(PaymentStatuses::PAID)
-                ->sum('amount');
+            $monthlyIncome = Income::getDateBetweenIncome($startOfMonth, $endOfMonth);
 
-            $monthlyExpense = Expense::query()
-                ->whereBetween('payment_date', [$startOfMonth, $endOfMonth])
-                ->whereStatus(PaymentStatuses::PAID)
-                ->sum('amount');
+            $monthlyExpense = Expense::getDateBetweenExpense($startOfMonth, $endOfMonth);
 
             $months[] = $monthName;
-            $incomes[] = $monthlyIncome;
-            $expenses[] = $monthlyExpense;
+            $incomes[$monthName] = $monthlyIncome;
+            $expenses[$monthName] = $monthlyExpense;
         }
+        dump($months, $incomes, $expenses);
 
         return [
             'months' => $months,
@@ -140,8 +127,8 @@ final class FinancialStats extends Page
     protected function getHeaderWidgets(): array
     {
         return [
-            //  StatsOverview::class,
-            //  MonthlyComparison::class,
+            StatsOverview::class,
+            MonthlyComparison::class,
         ];
     }
 
@@ -151,9 +138,9 @@ final class FinancialStats extends Page
     protected function getFooterWidgets(): array
     {
         return [
-            // ExpensesChart::class,
-            // IncomesChart::class,
-            // CategoryDistributionChart::class,
+            ExpensesChart::class,
+            IncomesChart::class,
+            CategoryDistributionChart::class,
         ];
     }
 }

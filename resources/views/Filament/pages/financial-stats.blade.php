@@ -119,7 +119,7 @@
     <!-- Load Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    {{--  <script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Income and Expense Chart
             const incomeExpenseCtx = document.getElementById('incomeExpenseChart').getContext('2d');
@@ -224,5 +224,5 @@
                 });
             }
         });
-    </script> --}}
+    </script>
 </x-filament-panels::page>

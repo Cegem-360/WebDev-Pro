@@ -27,13 +27,21 @@ final class CategoryResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $modelLabel = 'Kategória';
+
+    protected static ?string $pluralModelLabel = 'Kategóriák';
+
+    protected static ?string $navigationLabel = 'Kategóriák';
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 TextInput::make('name')
+                    ->label('Név')
                     ->required(),
                 Select::make('budget_item_type')
+                    ->label('Költségvetési tétel típusa')
                     ->options(BudgetItemTypes::class)
                     ->required(),
             ]);
@@ -44,8 +52,10 @@ final class CategoryResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label('Név')
                     ->searchable(),
                 TextColumn::make('budget_item_type')
+                    ->label('Költségvetési tétel típusa')
                     ->badge()
                     ->color(fn (Category $record): string => match ($record->budget_item_type) {
                         BudgetItemTypes::INCOME => 'success',
@@ -55,11 +65,13 @@ final class CategoryResource extends Resource
                     })
                     ->searchable(),
                 TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Létrehozva')
+                    ->dateTime('Y. m. d. H:i:s')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->label('Frissítve')
+                    ->dateTime('Y. m. d. H:i:s')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

@@ -29,6 +29,7 @@ final class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             IncomeSeeder::class,
             ExpenseSeeder::class,
+            WeeklyReportDemoSeeder::class,
         ]);
 
     }
