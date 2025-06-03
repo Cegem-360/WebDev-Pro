@@ -2,20 +2,37 @@
 
 declare(strict_types=1);
 
-namespace App\Filament\Widgets;
+namespace App\Filament\Widgets\Dashboard;
 
 use App\Enums\PaymentStatuses;
+use App\Enums\PaymentTypes;
 use App\Models\Income;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
 
 final class IncomesChart extends ChartWidget
 {
+    use InteractsWithPageFilters;
+
     protected static ?string $heading = 'Bevételek';
 
     protected int|string|array $columnSpan = 2;
 
     protected static ?string $maxHeight = '300px';
+
+    public function getHeading(): string
+    {
+        /*  $paymentType = $this->getData()['payment_type'] ?? null; */
+        $paymentType = PaymentTypes::SINGLE;
+        $heading = 'Bevételek';
+
+        if ($paymentType) {
+            $heading .= ' ('.($paymentType === PaymentTypes::RECURRING ? 'Ismétlődő' : 'Egyszeri').')';
+        }
+
+        return $heading;
+    }
 
     protected function getData(): array
     {
@@ -43,10 +60,12 @@ final class IncomesChart extends ChartWidget
     {
         $days = collect();
         $amounts = collect();
+        /*   $paymentType = $this->getData()['payment_type'] ?? null; */
+        $paymentType = PaymentTypes::SINGLE;
 
         // Get data for the current month by day
-        $currentMonth = Carbon::now()->startOfMonth();
-        $endOfMonth = Carbon::now()->endOfMonth();
+        $currentMonth = Carbon::now()->copy()->startOfMonth();
+        $endOfMonth = Carbon::now()->copy()->endOfMonth();
         $daysInMonth = $endOfMonth->day;
 
         // Create all days in current month
@@ -60,10 +79,16 @@ final class IncomesChart extends ChartWidget
             if ($date->lessThanOrEqualTo(Carbon::now())) {
                 $days->push($date->day);
 
-                $dayIncome = Income::query()
-                    ->wherePaymentDate($date)
-                    ->whereStatus(PaymentStatuses::PAID)
-                    ->sum('amount');
+                $query = Income::query()
+                    ->whereDay('payment_date', $date)
+                    ->whereStatus(PaymentStatuses::PAID);
+
+                // Apply payment type filter if specified
+                if ($paymentType) {
+                    $query->where('payment_type', $paymentType);
+                }
+
+                $dayIncome = $query->sum('amount');
 
                 $amounts->push($dayIncome);
             }

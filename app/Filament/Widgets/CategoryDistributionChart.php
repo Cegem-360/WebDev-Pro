@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Filament\Widgets;
 
 use App\Enums\PaymentStatuses;
+use App\Enums\PaymentTypes;
 use App\Models\Category;
 use App\Models\Expense;
 use App\Models\Income;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
+use Flowframe\Trend\TrendValue;
 
 final class CategoryDistributionChart extends ChartWidget
 {
@@ -19,15 +21,90 @@ final class CategoryDistributionChart extends ChartWidget
 
     protected static ?string $maxHeight = '300px';
 
+    public function getHeading(): string
+    {
+        /*  $paymentType = $this->getData()['payment_type'] ?? null; */
+        $paymentType = PaymentTypes::SINGLE;
+        $heading = 'Kategória Eloszlás';
+
+        if ($paymentType) {
+            $heading .= ' ('.($paymentType === PaymentTypes::RECURRING ? 'Ismétlődő' : 'Egyszeri').')';
+        }
+
+        return $heading;
+    }
+
     protected function getData(): array
     {
-        $data = $this->getCategoryData();
+        $paymentType = PaymentTypes::SINGLE;
+
+        $data['expenses'] = Category::query()
+            ->whereHas('expenses', function ($query) use ($paymentType) {
+                $query->whereStatus(PaymentStatuses::PAID)
+                    ->whereBetween('payment_date', [
+                        Carbon::now()->startOfMonth(),
+                        Carbon::now()->endOfMonth(),
+                    ]);
+
+                // Apply payment type filter if specified
+                if ($paymentType) {
+                    $query->where('payment_type', $paymentType);
+                }
+            })
+            ->withSum(['expenses' => function ($query) use ($paymentType) {
+                $query->whereStatus(PaymentStatuses::PAID)
+                    ->whereBetween('payment_date', [
+                        Carbon::now()->startOfMonth(),
+                        Carbon::now()->endOfMonth(),
+                    ]);
+
+                // Apply payment type filter if specified
+                if ($paymentType) {
+                    $query->where('payment_type', $paymentType);
+                }
+            }], 'amount')
+            ->get()
+            ->map(fn (Category $category) => new TrendValue(
+                date: $category->name,
+                aggregate: $category->expenses_sum_amount ?? 0
+            ));
+
+        $data['incomes'] = Category::query()
+            ->whereHas('incomes', function ($query) use ($paymentType) {
+                $query->whereStatus(PaymentStatuses::PAID)
+                    ->whereBetween('payment_date', [
+                        Carbon::now()->startOfMonth(),
+                        Carbon::now()->endOfMonth(),
+                    ]);
+
+                // Apply payment type filter if specified
+                if ($paymentType) {
+                    $query->where('payment_type', $paymentType);
+                }
+            })
+            ->withSum(['incomes' => function ($query) use ($paymentType) {
+                $query->whereStatus(PaymentStatuses::PAID)
+                    ->whereBetween('payment_date', [
+                        Carbon::now()->startOfMonth(),
+                        Carbon::now()->endOfMonth(),
+                    ]);
+
+                // Apply payment type filter if specified
+                if ($paymentType) {
+                    $query->where('payment_type', $paymentType);
+                }
+            }], 'amount')
+            ->get()
+            ->map(fn (Category $category) => new TrendValue(
+                date: $category->name,
+                aggregate: $category->incomes_sum_amount ?? 0
+            ));
 
         return [
             'datasets' => [
                 [
                     'label' => __('Kiadások'),
-                    'data' => $data['expense_amounts'],
+                    'data' => $data['expenses']->map(fn (TrendValue $value) => $value->aggregate),
                     'backgroundColor' => [
                         '#EF4444', '#F87171', '#FCA5A5', '#FECACA', '#FEE2E2',
                         '#DC2626', '#B91C1C', '#991B1B', '#7F1D1D', '#F87171',
@@ -35,14 +112,16 @@ final class CategoryDistributionChart extends ChartWidget
                 ],
                 [
                     'label' => __('Bevételek'),
-                    'data' => $data['income_amounts'],
+                    'data' => $data['incomes']->map(fn (TrendValue $value) => $value->aggregate),
                     'backgroundColor' => [
                         '#10B981', '#059669', '#047857', '#065F46', '#064E3B',
                         '#047C3F', '#166534', '#15803D', '#16A34A', '#22C55E',
                     ],
                 ],
             ],
-            'labels' => $data['categories'],
+            'labels' => Category::all()
+                ->pluck('name')
+                ->toArray(),
         ];
     }
 
@@ -66,49 +145,51 @@ final class CategoryDistributionChart extends ChartWidget
         ];
     }
 
-    private function getCategoryData(): array
+    private function getCategoryData()
     {
         $currentMonth = Carbon::now()->startOfMonth();
 
         // Get expense distribution by category
-        $expenseByCategories = Expense::query()
-            ->wherePaymentDate('>=', $currentMonth)
-            ->where('status', PaymentStatuses::PAID)
-            ->groupBy('category_id')
-            ->orderBy('amount', 'desc')
-            ->limit(10)
-            ->get();
+        /* $expenseByCategories = Expense::query()
+            ->whereBetween('payment_date', [$currentMonth, $currentMonth->copy()->endOfMonth()])
+            ->whereStatus(PaymentStatuses::PAID)
+            ->with('category')
+            ->get()
+            ->groupBy('category.name')
+            ->map(function ($incomes, $categoryName) {
+                return [
+                    'category' => $categoryName,
+                    'total' => $incomes->sum('amount'),
+                ];
+            })
+            ->values();
 
         // Get income distribution by category
         $incomeByCategories = Income::query()
-            ->wherePaymentDate('>=', $currentMonth)
-            ->where('status', PaymentStatuses::PAID)
-            ->groupBy('category_id')
-            ->orderBy('amount', 'desc')
-            ->limit(10)
-            ->get();
+            ->whereBetween('payment_date', [$currentMonth, $currentMonth->copy()->endOfMonth()])
+            ->whereStatus(PaymentStatuses::PAID)
+            ->with('category')
+            ->get()
+            ->groupBy('category.name')
+            ->map(function ($incomes, $categoryName) {
+                return [
+                    'category' => $categoryName,
+                    'total' => $incomes->sum('amount'),
+                ];
+            })
+            ->values(); */
+        /*
+                $categoryNames = collect([
+                    ...$expenseByCategories->pluck('category'),
+                    ...$incomeByCategories->pluck('category'),
+                ])->unique()->values()->toArray();
+                dump($expenseByCategories);
+         */
 
-        $categoryNames = collect([
-            ...$expenseByCategories->pluck('name'),
-            ...$incomeByCategories->pluck('name'),
-        ])->unique()->values()->toArray();
-
-        $expenseAmounts = [];
-        foreach ($categoryNames as $category) {
-            $expenseTotal = $expenseByCategories->firstWhere('name', $category)?->total ?? 0;
-            $expenseAmounts[] = $expenseTotal;
-        }
-
-        $incomeAmounts = [];
-        foreach ($categoryNames as $category) {
-            $incomeTotal = $incomeByCategories->firstWhere('name', $category)?->total ?? 0;
-            $incomeAmounts[] = $incomeTotal;
-        }
-
-        return [
+        /* return [
             'categories' => $categoryNames,
-            'expense_amounts' => $expenseAmounts,
-            'income_amounts' => $incomeAmounts,
-        ];
+            'expense_amounts' => $expenseByCategories->pluck('total')->toArray(),
+            'income_amounts' => $incomeByCategories->pluck('total')->toArray(),
+        ]; */
     }
 }

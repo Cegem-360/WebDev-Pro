@@ -16,6 +16,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteBulkAction;
@@ -43,20 +44,29 @@ final class ExpenseResource extends Resource
                 Select::make('category_id')
                     ->relationship('category', 'name')
                     ->label('Kategória'),
+
                 DatePicker::make('payment_date')
                     ->label('Fizetés dátuma')
                     ->required(),
                 Textarea::make('description')
                     ->label('Leírás')
-                    ->required()
+
                     ->columnSpanFull(),
                 TextInput::make('amount')
                     ->label('Összeg')
                     ->required()
                     ->numeric(),
                 Select::make('payment_type')
+                    ->live()
                     ->label('Fizetési mód')
                     ->options(PaymentTypes::class)
+                    ->required(),
+                TextInput::make('recurring_times')
+                    ->label('Ismétlődő alkalmak száma')
+                  /*   ->visible(fn (string $operation, Get $get) => /* $get('payment_type') === PaymentTypes::RECURRING ) */
+                    ->numeric()
+                    ->default(1)
+                    ->minValue(1)
                     ->required(),
                 Select::make('status')
                     ->label('Állapot')
@@ -74,9 +84,13 @@ final class ExpenseResource extends Resource
                     ->label('Kategória')
                     ->numeric()
                     ->sortable(),
+                TextColumn::make('description')
+                    ->label('Leírás')
+                    ->searchable()
+                    ->limit(50),
                 TextColumn::make('payment_date')
                     ->label('Fizetés dátuma')
-                    ->date('Y. m. d.')
+                    ->date('Y-m-d')
                     ->sortable(),
                 TextColumn::make('amount')
                     ->label('Összeg')
@@ -90,12 +104,12 @@ final class ExpenseResource extends Resource
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->label('Létrehozva')
-                    ->dateTime('Y. m. d. H:i:s')
+                    ->dateTime('Y-m-d H:i:s')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->label('Frissítve')
-                    ->dateTime('Y. m. d. H:i:s')
+                    ->dateTime('Y-m-d H:i:s')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

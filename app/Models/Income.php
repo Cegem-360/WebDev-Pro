@@ -6,11 +6,14 @@ namespace App\Models;
 
 use App\Enums\PaymentStatuses;
 use App\Enums\PaymentTypes;
+use App\Observers\IncomeObserver;
 use Database\Factories\IncomeFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy(IncomeObserver::class)]
 final class Income extends Model
 {
     /** @use HasFactory<IncomeFactory> */

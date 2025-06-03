@@ -5,11 +5,6 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Enums\PaymentStatuses;
-use App\Filament\Widgets\CategoryDistributionChart;
-use App\Filament\Widgets\ExpensesChart;
-use App\Filament\Widgets\IncomesChart;
-use App\Filament\Widgets\MonthlyComparison;
-use App\Filament\Widgets\StatsOverview;
 use App\Models\Expense;
 use App\Models\Income;
 use Carbon\Carbon;
@@ -71,11 +66,16 @@ final class FinancialStats extends Page
         return Income::query()
             ->whereBetween('payment_date', [$currentMonth, $currentMonth->copy()->endOfMonth()])
             ->whereStatus(PaymentStatuses::PAID)
-            ->with(['category' => function ($query) {
-                return $query->groupBy('name');
-            }])
-            ->orderBy('amount', 'desc')
-            ->get();
+            ->with('category')
+            ->get()
+            ->groupBy('category.name')
+            ->map(function ($incomes, $categoryName) {
+                return [
+                    'category' => $categoryName,
+                    'total' => $incomes->sum('amount'),
+                ];
+            })
+            ->values();
     }
 
     public function getMonthlyExpensesByCategory(): Collection
@@ -85,11 +85,16 @@ final class FinancialStats extends Page
         return Expense::query()
             ->whereBetween('payment_date', [$currentMonth, $currentMonth->copy()->endOfMonth()])
             ->whereStatus(PaymentStatuses::PAID)
-            ->with(['category' => function ($query) {
-                return $query->groupBy('name');
-            }])
-            ->orderBy('amount', 'desc')
-            ->get();
+            ->with('category')
+            ->get()
+            ->groupBy('category.name')
+            ->map(function ($incomes, $categoryName) {
+                return [
+                    'category' => $categoryName,
+                    'total' => $incomes->sum('amount'),
+                ];
+            })
+            ->values();
     }
 
     public function getIncomeExpenseByMonth(): array
@@ -99,10 +104,10 @@ final class FinancialStats extends Page
         $expenses = [];
 
         for ($i = 5; $i >= 0; $i--) {
-            $month = Carbon::now()->subMonths($i);
+            $month = Carbon::now()->copy()->subMonths($i);
             $startOfMonth = $month->copy()->startOfMonth();
             $endOfMonth = $month->copy()->endOfMonth();
-            $monthName = $month->translatedFormat('F');
+            $monthName = $month->copy()->translatedFormat('F');
 
             $monthlyIncome = Income::getDateBetweenIncome($startOfMonth, $endOfMonth);
 
@@ -112,7 +117,6 @@ final class FinancialStats extends Page
             $incomes[$monthName] = $monthlyIncome;
             $expenses[$monthName] = $monthlyExpense;
         }
-        dump($months, $incomes, $expenses);
 
         return [
             'months' => $months,
@@ -127,8 +131,7 @@ final class FinancialStats extends Page
     protected function getHeaderWidgets(): array
     {
         return [
-            StatsOverview::class,
-            MonthlyComparison::class,
+
         ];
     }
 
@@ -138,9 +141,7 @@ final class FinancialStats extends Page
     protected function getFooterWidgets(): array
     {
         return [
-            ExpensesChart::class,
-            IncomesChart::class,
-            CategoryDistributionChart::class,
+
         ];
     }
 }

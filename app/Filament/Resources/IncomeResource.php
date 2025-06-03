@@ -16,6 +16,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteBulkAction;
@@ -48,7 +49,7 @@ final class IncomeResource extends Resource
                     ->required(),
                 Textarea::make('description')
                     ->label('Leírás')
-                    ->required()
+
                     ->columnSpanFull(),
                 TextInput::make('amount')
                     ->label('Összeg')
@@ -56,7 +57,15 @@ final class IncomeResource extends Resource
                     ->numeric(),
                 Select::make('payment_type')
                     ->label('Fizetési mód')
+                    ->live()
                     ->options(PaymentTypes::class)
+                    ->required(),
+                TextInput::make('recurring_times')
+                    ->label('Ismétlődő alkalmak száma')
+                 /*    ->visible(fn (string $operation, Get $get) => $get('payment_type') === PaymentTypes::RECURRING) */
+                    ->numeric()
+                    ->default(1)
+                    ->minValue(1)
                     ->required(),
                 Select::make('status')
                     ->label('Állapot')
@@ -74,9 +83,13 @@ final class IncomeResource extends Resource
                     ->label('Kategória')
                     ->numeric()
                     ->sortable(),
+                TextColumn::make('description')
+                    ->label('Leírás')
+                    ->searchable()
+                    ->limit(50),
                 TextColumn::make('payment_date')
                     ->label('Befizetés dátuma')
-                    ->date('Y. m. d.')
+                    ->date('Y-m-d')
                     ->sortable(),
                 TextColumn::make('amount')
                     ->label('Összeg')
@@ -87,12 +100,12 @@ final class IncomeResource extends Resource
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->label('Létrehozva')
-                    ->dateTime('Y. m. d. H:i:s')
+                    ->dateTime('Y-m-d H:i:s')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->label('Frissítve')
-                    ->dateTime('Y. m. d. H:i:s')
+                    ->dateTime('Y-m-d H:i:s')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -103,6 +116,7 @@ final class IncomeResource extends Resource
                 ViewAction::make(),
                 EditAction::make(),
             ])
+
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
@@ -121,7 +135,7 @@ final class IncomeResource extends Resource
     {
         return [
             'index' => ListIncomes::route('/'),
-            /* 'create' => CreateIncome::route('/create'), */
+            /*  'create' => CreateIncome::route('/create'), */
             'view' => ViewIncome::route('/{record}'),
             'edit' => EditIncome::route('/{record}/edit'),
         ];

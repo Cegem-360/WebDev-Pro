@@ -22,6 +22,9 @@ return new class extends Migration
             $table->date('payment_date');
             $table->text('description');
             $table->integer('amount');
+            $table->integer('recurring_times')
+                ->default(1)
+                ->comment('Number of times the expense is recurring, default is 1 for single payments');
             $table->enum('payment_type', array_column(PaymentTypes::cases(), 'value'))
                 ->nullable(false)
                 ->default(PaymentTypes::SINGLE->value)
@@ -29,7 +32,7 @@ return new class extends Migration
             $table->enum('status', array_column(PaymentStatuses::cases(), 'value'))
                 ->nullable(false)
                 ->default(PaymentStatuses::DRAFT->value)
-                ->comment('The status of the income, e.g., draft, pending, invoiced, paid');
+                ->comment('The status of the expense, e.g., draft, pending, invoiced, paid');
             $table->timestamps();
         });
     }

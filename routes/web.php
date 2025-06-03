@@ -5,5 +5,5 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return route('filament.dashboard');
+    return redirect()->route('filament.admin.pages.dashboard');
 });

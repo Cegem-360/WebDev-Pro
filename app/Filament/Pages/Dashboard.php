@@ -4,23 +4,28 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Enums\PaymentStatuses;
+use App\Enums\PaymentTypes;
 use Filament\Facades\Filament;
-use Filament\Pages\Page;
+use Filament\Forms\Components\Select;
+use Filament\Pages\Dashboard\Actions\FilterAction;
+use Filament\Pages\Dashboard as BaseDashboard;
+use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\Widgets\Widget;
 use Filament\Widgets\WidgetConfiguration;
 use Illuminate\Contracts\Support\Htmlable;
 
-final class Dashboard extends Page
+final class Dashboard extends BaseDashboard
 {
+    use HasFiltersForm;
+
     protected static ?int $navigationSort = -2;
 
     /**
      * @var view-string
      */
-    protected static string $view = 'filament.pages.dashboard';
-
-    private static string $routePath = '/';
+    protected static string $view = 'Filament.pages.dashboard';
 
     public static function getNavigationLabel(): string
     {
@@ -65,8 +70,44 @@ final class Dashboard extends Page
         return 2;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    public function getWidgetData(): array
+    {
+        return [
+            'payment_type' => $this->filters['payment_type'],
+            'payment_status' => $this->filters['payment_status'],
+        ];
+    }
+
     public function getTitle(): string|Htmlable
     {
         return __('Filament/pages/dashboard.title');
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            FilterAction::make()
+                ->form([
+                    Select::make('payment_type')
+                        ->label('Fizetési mód')
+                        ->options(PaymentTypes::class)
+                        ->placeholder('Összes fizetési mód')
+                        ->live()
+                        ->afterStateUpdated(function () {
+                            $this->dispatch('filter-changed');
+                        }),
+                    Select::make('payment_status')
+                        ->label('Fizetési státusz')
+                        ->options(PaymentStatuses::class)
+                        ->placeholder('Összes fizetési státusz')
+                        ->live()
+                        ->afterStateUpdated(function () {
+                            $this->dispatch('filter-changed');
+                        }),
+                ]),
+        ];
     }
 }
