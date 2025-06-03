@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace App\Filament\Widgets;
 
 use App\Enums\PaymentStatuses;
-use App\Enums\PaymentTypes;
 use App\Models\Category;
 use App\Models\Expense;
 use App\Models\Income;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Flowframe\Trend\TrendValue;
 
 final class CategoryDistributionChart extends ChartWidget
 {
+    use InteractsWithPageFilters;
+
     protected static ?string $heading = 'Kategória Eloszlás';
 
     protected int|string|array $columnSpan = 'full';
@@ -23,20 +25,17 @@ final class CategoryDistributionChart extends ChartWidget
 
     public function getHeading(): string
     {
-        /*  $paymentType = $this->getData()['payment_type'] ?? null; */
-        $paymentType = PaymentTypes::SINGLE;
+        $paymentType = $this->filters['payment_type'] ?? null;
         $heading = 'Kategória Eloszlás';
 
-        if ($paymentType) {
-            $heading .= ' ('.($paymentType === PaymentTypes::RECURRING ? 'Ismétlődő' : 'Egyszeri').')';
-        }
+        $heading .= ' ('.$paymentType.')';
 
         return $heading;
     }
 
     protected function getData(): array
     {
-        $paymentType = PaymentTypes::SINGLE;
+        $paymentType = $this->filters['payment_type'] ?? null;
 
         $data['expenses'] = Category::query()
             ->whereHas('expenses', function ($query) use ($paymentType) {

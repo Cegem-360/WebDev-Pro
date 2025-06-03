@@ -6,10 +6,15 @@ namespace App\Filament\Pages;
 
 use App\Enums\PaymentStatuses;
 use App\Enums\PaymentTypes;
+use App\Filament\Widgets\Dashboard\ExpensesChart;
+use App\Filament\Widgets\Dashboard\IncomesChart;
+use App\Filament\Widgets\Dashboard\StatsOverviewWidget;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Form;
 use Filament\Pages\Dashboard\Actions\FilterAction;
 use Filament\Pages\Dashboard as BaseDashboard;
+use Filament\Pages\Dashboard\Concerns\HasFiltersAction;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\Widgets\Widget;
@@ -18,6 +23,7 @@ use Illuminate\Contracts\Support\Htmlable;
 
 final class Dashboard extends BaseDashboard
 {
+    use HasFiltersAction;
     use HasFiltersForm;
 
     protected static ?int $navigationSort = -2;
@@ -46,13 +52,14 @@ final class Dashboard extends BaseDashboard
         return self::$routePath;
     }
 
-    /**
-     * @return array<class-string<Widget> | WidgetConfiguration>
-     */
-    public function getWidgets(): array
-    {
-        return Filament::getWidgets();
-    }
+    /*   public function getHeaderWidgets(): array
+      {
+          return [
+              ExpensesChart::class,
+              IncomesChart::class,
+              StatsOverviewWidget::class,
+          ];
+      } */
 
     /**
      * @return array<class-string<Widget> | WidgetConfiguration>
@@ -63,6 +70,29 @@ final class Dashboard extends BaseDashboard
     }
 
     /**
+     * @return array<class-string<Widget> | WidgetConfiguration>
+     */
+    public function getWidgets(): array
+    {
+        return [
+            ExpensesChart::class,
+            IncomesChart::class,
+            StatsOverviewWidget::class,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    /* public function getWidgetData(): array
+    {
+        return [
+            'payment_type' => $this->filters['payment_type'],
+            'payment_status' => $this->filters['payment_status'],
+        ];
+    } */
+
+    /**
      * @return int | string | array<string, int | string | null>
      */
     public function getColumns(): int|string|array
@@ -70,44 +100,41 @@ final class Dashboard extends BaseDashboard
         return 2;
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function getWidgetData(): array
-    {
-        return [
-            'payment_type' => $this->filters['payment_type'],
-            'payment_status' => $this->filters['payment_status'],
-        ];
-    }
-
     public function getTitle(): string|Htmlable
     {
         return __('Filament/pages/dashboard.title');
     }
 
-    protected function getHeaderActions(): array
+    public function filtersForm(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Select::make('payment_type')
+                    ->label('Fizetési mód')
+                    ->options(PaymentTypes::class)
+                    ->placeholder('Összes fizetési mód')
+                    ->live(),
+                Select::make('payment_status')
+                    ->label('Fizetési státusz')
+                    ->options(PaymentStatuses::class)
+                    ->placeholder('Összes fizetési státusz')
+                    ->live(),
+            ])
+            ->columns(1);
+    }
+
+    /* protected function getHeaderActions(): array
     {
         return [
             FilterAction::make()
                 ->form([
                     Select::make('payment_type')
                         ->label('Fizetési mód')
-                        ->options(PaymentTypes::class)
-                        ->placeholder('Összes fizetési mód')
-                        ->live()
-                        ->afterStateUpdated(function () {
-                            $this->dispatch('filter-changed');
-                        }),
+                        ->options(PaymentTypes::class),
                     Select::make('payment_status')
                         ->label('Fizetési státusz')
-                        ->options(PaymentStatuses::class)
-                        ->placeholder('Összes fizetési státusz')
-                        ->live()
-                        ->afterStateUpdated(function () {
-                            $this->dispatch('filter-changed');
-                        }),
+                        ->options(PaymentStatuses::class),
                 ]),
         ];
-    }
+    } */
 }

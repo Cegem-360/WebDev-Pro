@@ -10,6 +10,7 @@ use App\Models\Expense;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
+use Illuminate\Database\Eloquent\Builder;
 
 final class ExpensesChart extends ChartWidget
 {
@@ -23,19 +24,24 @@ final class ExpensesChart extends ChartWidget
 
     public function getHeading(): string
     {
-        /* $paymentType = $this->getData()['payment_type'] ?? null; */
-        $paymentType = PaymentTypes::SINGLE;
-        $heading = 'Kiadások';
 
-        if ($paymentType) {
-            $heading .= ' ('.($paymentType === PaymentTypes::RECURRING ? 'Ismétlődő' : 'Egyszeri').')';
+        $paymentType = null;
+        if (isset($this->filters['payment_type'])) {
+            $paymentType = PaymentTypes::tryFrom($this->filters['payment_type']);
         }
+
+        $heading = 'Kiadások '.match ($paymentType) {
+            PaymentTypes::RECURRING => '(Ismétlődő)',
+            PaymentTypes::SINGLE => '(Egyszeri)',
+            default => '',
+        };
 
         return $heading;
     }
 
     protected function getData(): array
     {
+
         $data = $this->getExpenseData();
 
         return [
@@ -60,37 +66,33 @@ final class ExpensesChart extends ChartWidget
     {
         $days = collect();
         $amounts = collect();
-        /*  $paymentType = $this->getData()['payment_type'] ?? null; */
-        $paymentType = PaymentTypes::SINGLE;
+
         // Get data for the current month by day
         $currentMonth = Carbon::now()->copy()->startOfMonth();
         $endOfMonth = Carbon::now()->copy()->endOfMonth();
         $daysInMonth = $endOfMonth->day;
+        $paymentType = $this->filters['payment_type'] ?? null;
 
+        $status = $this->filters['payment_status'] ?? PaymentStatuses::PAID;
         // Create all days in current month
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $date = Carbon::createFromDate(
-                $currentMonth->year,
-                $currentMonth->month,
-                $day
+                year: $currentMonth->year,
+                month: $currentMonth->month,
+                day: $day
             );
 
-            if ($date->lessThanOrEqualTo(Carbon::now())) {
-                $days->push($date->day);
+            $days->push($day);
 
-                $query = Expense::query()
-                    ->whereDay('payment_date', $date)
-                    ->whereStatus(PaymentStatuses::PAID);
+            $query = Expense::query()
+                ->whereDay('payment_date', $date)
+                ->when($paymentType, fn (Builder $query) => $query->wherePaymentType($paymentType))
+                ->when($status, fn (Builder $query) => $query->whereStatus($status));
 
-                // Apply payment type filter if specified
-                if ($paymentType) {
-                    $query->where('payment_type', $paymentType);
-                }
+            $dayIncome = $query->sum('amount');
 
-                $dayExpense = $query->sum('amount');
+            $amounts->push($dayIncome);
 
-                $amounts->push($dayExpense);
-            }
         }
 
         return [

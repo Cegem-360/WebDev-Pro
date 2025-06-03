@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
-use App\Filament\Widgets\FinancialReportOverview;
+use App\Filament\Widgets\FinancialReport\FinancialReportOverview;
 use Filament\Pages\Page;
 
 final class FinancialReport extends Page
