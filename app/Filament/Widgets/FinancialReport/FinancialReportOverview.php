@@ -23,27 +23,27 @@ final class FinancialReportOverview extends BaseWidget
         // Build base queries with payment type filter
         $incomeQueryPaid = Income::query()
             ->paid()
-            ->when($this->filters['year'] ?? null, fn ($query, $year) => $query->whereYear('created_at', $year))
-            ->when($this->filters['month'] ?? null, fn ($query, $month) => $query->whereMonth('created_at', $month))
+            ->when($this->filters['year'] ?? null, fn ($query, $year) => $query->whereYear('payment_date', $year))
+            ->when($this->filters['month'] ?? null, fn ($query, $month) => $query->whereMonth('payment_date', $month))
             ->pluck('amount')
             ->sum();
         $expenseQueryPaid = Expense::query()
             ->paid()
-            ->when($this->filters['year'] ?? null, fn ($query, $year) => $query->whereYear('created_at', $year))
-            ->when($this->filters['month'] ?? null, fn ($query, $month) => $query->whereMonth('created_at', $month))
+            ->when($this->filters['year'] ?? null, fn ($query, $year) => $query->whereYear('payment_date', $year))
+            ->when($this->filters['month'] ?? null, fn ($query, $month) => $query->whereMonth('payment_date', $month))
             ->pluck('amount')
             ->sum();
         $incomeQueryUnpaid = Income::query()
             ->unpaid()
-            ->when($this->filters['year'] ?? null, fn ($query, $year) => $query->whereYear('created_at', $year))
-            ->when($this->filters['month'] ?? null, fn ($query, $month) => $query->whereMonth('created_at', $month))
+            ->when($this->filters['year'] ?? null, fn ($query, $year) => $query->whereYear('payment_date', $year))
+            ->when($this->filters['month'] ?? null, fn ($query, $month) => $query->whereMonth('payment_date', $month))
             ->pluck('amount')
             ->sum();
 
         $expenseQueryUnpaid = Expense::query()
             ->unpaid()
-            ->when($this->filters['year'] ?? null, fn ($query, $year) => $query->whereYear('created_at', $year))
-            ->when($this->filters['month'] ?? null, fn ($query, $month) => $query->whereMonth('created_at', $month))
+            ->when($this->filters['year'] ?? null, fn ($query, $year) => $query->whereYear('payment_date', $year))
+            ->when($this->filters['month'] ?? null, fn ($query, $month) => $query->whereMonth('payment_date', $month))
             ->pluck('amount')->sum();
 
         $netBalance = ($incomeQueryPaid + $incomeQueryUnpaid) - ($expenseQueryPaid + $expenseQueryUnpaid);
