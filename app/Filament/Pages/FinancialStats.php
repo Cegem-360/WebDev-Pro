@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
-use App\Enums\PaymentStatuses;
 use App\Models\Expense;
 use App\Models\Income;
 use Carbon\Carbon;
@@ -83,7 +82,7 @@ final class FinancialStats extends Page
 
         return Expense::query()
             ->whereBetween('payment_date', [$currentMonth, $currentMonth->copy()->endOfMonth()])
-            ->whereStatus(PaymentStatuses::PAID)
+            ->paid()
             ->with('category')
             ->get()
             ->groupBy('category.name')
