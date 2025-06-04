@@ -22,18 +22,36 @@ final class FinancialReportOverview extends BaseWidget
     {
 
         // Build base queries with payment type filter
-        $incomeQuery = Income::query();
-        $expenseQuery = Expense::query();
+        $incomeQuery = Income::query()
+            ->when(
+                $this->filters['year'] ?? null,
+                fn ($query, $year) => $query->whereYear('created_at', $year)
+            )
+            ->when(
+                $this->filters['month'] ?? null,
+                fn ($query, $month) => $query->whereMonth('created_at', $month)
+            );
+
+        $expenseQuery = Expense::query()
+
+            ->when(
+                $this->filters['year'] ?? null,
+                fn ($query, $year) => $query->whereYear('created_at', $year)
+            )
+            ->when(
+                $this->filters['month'] ?? null,
+                fn ($query, $month) => $query->whereMonth('created_at', $month)
+            );
 
         // Calculate totals
-        $totalIncome = (int) $incomeQuery->sum('amount');
-        $totalExpense = (int) $expenseQuery->sum('amount');
+        $totalIncome = $incomeQuery->sumAmount();
+        $totalExpense = $expenseQuery->sumAmount();
 
         // Apply status filters on top of payment type filter
-        $paidIncome = (int) (clone $incomeQuery)->whereStatus(PaymentStatuses::PAID)->sum('amount');
-        $unpaidIncome = (int) (clone $incomeQuery)->whereStatus(PaymentStatuses::DRAFT)->sum('amount');
-        $paidExpense = (int) (clone $expenseQuery)->whereStatus(PaymentStatuses::PAID)->sum('amount');
-        $unpaidExpense = (int) (clone $expenseQuery)->whereStatus(PaymentStatuses::DRAFT)->sum('amount');
+        $paidIncome = (clone $incomeQuery)->whereStatus(PaymentStatuses::PAID)->sumAmount();
+        $unpaidIncome = (clone $incomeQuery)->whereStatus(PaymentStatuses::DRAFT)->sumAmount();
+        $paidExpense = (clone $expenseQuery)->whereStatus(PaymentStatuses::PAID)->sumAmount();
+        $unpaidExpense = (clone $expenseQuery)->whereStatus(PaymentStatuses::DRAFT)->sumAmount();
 
         $netBalance = $totalIncome - $totalExpense;
 
