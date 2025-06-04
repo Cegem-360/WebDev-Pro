@@ -21,62 +21,56 @@ final class FinancialReportOverview extends BaseWidget
     {
 
         // Build base queries with payment type filter
-        $incomeQuery = Income::query()
-            ->when(
-                $this->filters['year'] ?? null,
-                fn ($query, $year) => $query->whereYear('created_at', $year)
-            )
-            ->when(
-                $this->filters['month'] ?? null,
-                fn ($query, $month) => $query->whereMonth('created_at', $month)
-            );
+        $incomeQueryPaid = Income::query()
+            ->paid()
+            ->when($this->filters['year'] ?? null, fn ($query, $year) => $query->whereYear('created_at', $year))
+            ->when($this->filters['month'] ?? null, fn ($query, $month) => $query->whereMonth('created_at', $month))
+            ->pluck('amount')
+            ->sum();
+        $expenseQueryPaid = Expense::query()
+            ->paid()
+            ->when($this->filters['year'] ?? null, fn ($query, $year) => $query->whereYear('created_at', $year))
+            ->when($this->filters['month'] ?? null, fn ($query, $month) => $query->whereMonth('created_at', $month))
+            ->pluck('amount')
+            ->sum();
+        $incomeQueryUnpaid = Income::query()
+            ->unpaid()
+            ->when($this->filters['year'] ?? null, fn ($query, $year) => $query->whereYear('created_at', $year))
+            ->when($this->filters['month'] ?? null, fn ($query, $month) => $query->whereMonth('created_at', $month))
+            ->pluck('amount')
+            ->sum();
 
-        $expenseQuery = Expense::when(
-            $this->filters['year'] ?? null,
-            fn ($query, $year) => $query->whereYear('created_at', $year)
-        )
-            ->when(
-                $this->filters['month'] ?? null,
-                fn ($query, $month) => $query->whereMonth('created_at', $month)
-            );
+        $expenseQueryUnpaid = Expense::query()
+            ->unpaid()
+            ->when($this->filters['year'] ?? null, fn ($query, $year) => $query->whereYear('created_at', $year))
+            ->when($this->filters['month'] ?? null, fn ($query, $month) => $query->whereMonth('created_at', $month))
+            ->pluck('amount')->sum();
 
-        // Calculate totals
-        $totalIncome = $incomeQuery->pluck('amount')->sum();
-        $totalExpense = $expenseQuery->pluck('amount')->sum();
-
-        // Apply status filters on top of payment type filter
-        $paidIncome = (clone $incomeQuery)->paid()->pluck('amount')->sum();
-        $unpaidIncome = (clone $incomeQuery)->unpaid()->pluck('amount')->sum();
-        $paidExpense = (clone $expenseQuery)->paid()->pluck('amount')->sum();
-        $unpaidExpense = (clone $expenseQuery)->unpaid()->pluck('amount')->sum();
-
-        $netBalance = $totalIncome - $totalExpense;
+        $netBalance = ($incomeQueryPaid + $incomeQueryUnpaid) - ($expenseQueryPaid + $expenseQueryUnpaid);
 
         return [
-            Stat::make('Kifizetett bevétel', Number::currency($paidIncome, 'HUF', 'hu', 0))
+            Stat::make('Kifizetett bevétel', Number::currency($incomeQueryPaid, 'HUF', 'hu', 0))
                 ->description('Teljes megkapott bevétel')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success'),
-
-            Stat::make('Kifizetetlen bevétel', Number::currency($unpaidIncome, 'HUF', 'hu', 0))
-                ->description('Várható bevétel')
-                ->descriptionIcon('heroicon-m-clock')
-                ->color('warning'),
-
-            Stat::make('Kifizetett kiadás', Number::currency($paidExpense, 'HUF', 'hu', 0))
+            Stat::make('Kifizetett kiadás', Number::currency($expenseQueryPaid, 'HUF', 'hu', 0))
                 ->description('Teljes kifizetett kiadás')
                 ->descriptionIcon('heroicon-m-arrow-trending-down')
                 ->color('danger'),
-
-            Stat::make('Kifizetetlen kiadás', Number::currency($unpaidExpense, 'HUF', 'hu', 0))
-                ->description('Függőben lévő kiadások')
-                ->descriptionIcon('heroicon-m-clock')
-                ->color('warning'),
-
             Stat::make('Egyenleg', Number::currency($netBalance, 'HUF', 'hu', 0))
                 ->description('Bevétel mínusz kiadás')
                 ->descriptionIcon($netBalance >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
                 ->color($netBalance >= 0 ? 'success' : 'danger'),
+
+            Stat::make('Kifizetetlen bevétel', Number::currency($incomeQueryUnpaid, 'HUF', 'hu', 0))
+                ->description('Várható bevétel')
+                ->descriptionIcon('heroicon-m-clock')
+                ->color('warning'),
+            Stat::make('Kifizetetlen kiadás', Number::currency($expenseQueryUnpaid, 'HUF', 'hu', 0))
+                ->description('Függőben lévő kiadások')
+                ->descriptionIcon('heroicon-m-clock')
+                ->color('warning'),
+
         ];
     }
 }

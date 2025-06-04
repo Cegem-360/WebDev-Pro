@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
-use App\Enums\PaymentStatuses;
 use App\Filament\Widgets\FinancialReport\FinancialReportOverview;
 use App\Models\Expense;
 use App\Models\Income;
@@ -95,7 +94,7 @@ final class FinancialReport extends Page
         ];
     }
 
-    public function getTotalIncome(?PaymentStatuses $status = null): Builder
+    public function getTotalIncome(bool $paid = false): Builder
     {
 
         return Income::query()
@@ -107,10 +106,17 @@ final class FinancialReport extends Page
                 $this->filters['month'] ?? null,
                 fn ($query) => $query->whereMonth('payment_date', $this->filters['month'])
             )
-            ->when($status, fn ($query) => $query->whereStatus($status));
+            ->when(
+                $paid,
+                fn ($query) => $query->paid()
+            )
+            ->when(
+                ! $paid,
+                fn ($query) => $query->unpaid()
+            );
     }
 
-    public function getTotalExpense(?PaymentStatuses $status = null): Builder
+    public function getTotalExpense(bool $paid = false): Builder
     {
 
         return Expense::query()
@@ -122,7 +128,14 @@ final class FinancialReport extends Page
                 $this->filters['month'] ?? null,
                 fn ($query) => $query->whereMonth('payment_date', $this->filters['month'])
             )
-            ->when($status, fn ($query) => $query->whereStatus($status));
+            ->when(
+                $paid,
+                fn ($query) => $query->paid()
+            )
+            ->when(
+                ! $paid,
+                fn ($query) => $query->unpaid()
+            );
     }
 
     /**

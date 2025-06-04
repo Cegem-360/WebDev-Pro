@@ -24,7 +24,6 @@ final class ExpensesChart extends ChartWidget
 
     public function getHeading(): string
     {
-
         $paymentType = null;
         if (isset($this->filters['payment_type'])) {
             $paymentType = PaymentTypes::tryFrom($this->filters['payment_type']);
@@ -41,7 +40,6 @@ final class ExpensesChart extends ChartWidget
 
     protected function getData(): array
     {
-
         $data = $this->getExpenseData();
 
         return [
