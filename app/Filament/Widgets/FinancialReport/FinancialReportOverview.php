@@ -33,7 +33,6 @@ final class FinancialReportOverview extends BaseWidget
             );
 
         $expenseQuery = Expense::query()
-
             ->when(
                 $this->filters['year'] ?? null,
                 fn ($query, $year) => $query->whereYear('created_at', $year)
@@ -44,14 +43,14 @@ final class FinancialReportOverview extends BaseWidget
             );
 
         // Calculate totals
-        $totalIncome = $incomeQuery->sumAmount();
-        $totalExpense = $expenseQuery->sumAmount();
+        $totalIncome = $incomeQuery->pluck('amount')->sum();
+        $totalExpense = $expenseQuery->pluck('amount')->sum();
 
         // Apply status filters on top of payment type filter
-        $paidIncome = (clone $incomeQuery)->whereStatus(PaymentStatuses::PAID)->sumAmount();
-        $unpaidIncome = (clone $incomeQuery)->whereStatus(PaymentStatuses::DRAFT)->sumAmount();
-        $paidExpense = (clone $expenseQuery)->whereStatus(PaymentStatuses::PAID)->sumAmount();
-        $unpaidExpense = (clone $expenseQuery)->whereStatus(PaymentStatuses::DRAFT)->sumAmount();
+        $paidIncome = (clone $incomeQuery)->paid()->pluck('amount')->sum();
+        $unpaidIncome = (clone $incomeQuery)->unpaid()->pluck('amount')->sum();
+        $paidExpense = (clone $expenseQuery)->whereStatus(PaymentStatuses::PAID)->pluck('amount')->sum();
+        $unpaidExpense = (clone $expenseQuery)->whereStatus(PaymentStatuses::DRAFT)->pluck('amount')->sum();
 
         $netBalance = $totalIncome - $totalExpense;
 

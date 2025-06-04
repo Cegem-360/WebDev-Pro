@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Widgets;
 
-use App\Enums\PaymentStatuses;
 use App\Enums\PaymentTypes;
 use App\Models\Expense;
 use App\Models\Income;
@@ -37,28 +36,11 @@ final class StatsOverviewWidget extends BaseWidget
                 $currentMonth->copy()->endOfMonth(),
             ]);
 
-        $monthlyIncome = (int) $incomeQuery->sum('amount');
-        $monthlyExpense = (int) $expenseQuery->sum('amount');
+        $monthlyIncome = $incomeQuery->pluck('amount')->sum();
+        $monthlyExpense = $expenseQuery->pluck('amount')->sum();
 
         $balance = $monthlyIncome - $monthlyExpense;
         $color = $balance >= 0 ? 'success' : 'danger';
-
-        $recurringIncomeQuery = Income::query()
-            ->where('payment_type', PaymentTypes::RECURRING)
-            ->where('status', PaymentStatuses::PAID);
-
-        $recurringExpenseQuery = Expense::query()
-            ->where('payment_type', PaymentTypes::RECURRING)
-            ->where('status', PaymentStatuses::PAID);
-
-        /*  // If filter is already set to recurring, use the same filtered query
-         if ($paymentType && $paymentType === PaymentTypes::RECURRING) {
-             $recurringIncome = $incomeQuery->sum('amount');
-             $recurringExpense = $expenseQuery->sum('amount');
-         } else {
-             $recurringIncome = $recurringIncomeQuery->sum('amount');
-             $recurringExpense = $recurringExpenseQuery->sum('amount');
-         } */
 
         // Add payment type info to description
         $filterDescription = match ($paymentType) {

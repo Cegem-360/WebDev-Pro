@@ -63,9 +63,8 @@ final class FinancialStats extends Page
     {
         $currentMonth = Carbon::now()->copy()->startOfMonth();
 
-        return Income::query()
+        return Income::paid()
             ->whereBetween('payment_date', [$currentMonth, $currentMonth->copy()->endOfMonth()])
-            ->whereStatus(PaymentStatuses::PAID)
             ->with('category')
             ->get()
             ->groupBy('category.name')

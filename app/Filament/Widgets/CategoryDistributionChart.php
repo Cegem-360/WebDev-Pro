@@ -158,7 +158,7 @@ final class CategoryDistributionChart extends ChartWidget
             ->map(function ($incomes, $categoryName) {
                 return [
                     'category' => $categoryName,
-                    'total' => $incomes->sum('amount'),
+                    'total' => $incomes->sumAmount(),
                 ];
             })
             ->values();
@@ -173,7 +173,7 @@ final class CategoryDistributionChart extends ChartWidget
             ->map(function ($incomes, $categoryName) {
                 return [
                     'category' => $categoryName,
-                    'total' => $incomes->sum('amount'),
+                    'total' => $incomes->sumAmount(),
                 ];
             })
             ->values(); */

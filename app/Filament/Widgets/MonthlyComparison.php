@@ -47,10 +47,10 @@ final class MonthlyComparison extends StatsOverviewWidget
             ]);
 
         // Execute queries
-        $currentMonthIncome = (int) $currentMonthIncomeQuery->sum('amount');
-        $currentMonthExpense = (int) $currentMonthExpenseQuery->sum('amount');
-        $lastMonthIncome = (int) $lastMonthIncomeQuery->sum('amount');
-        $lastMonthExpense = (int) $lastMonthExpenseQuery->sum('amount');
+        $currentMonthIncome = (int) $currentMonthIncomeQuery->sumAmount();
+        $currentMonthExpense = (int) $currentMonthExpenseQuery->sumAmount();
+        $lastMonthIncome = (int) $lastMonthIncomeQuery->sumAmount();
+        $lastMonthExpense = (int) $lastMonthExpenseQuery->sumAmount();
 
         // We already have the data from our queries, so remove the duplicate calls
         // $lastMonthIncome = Income::getDateBetweenIncome($lastMonth, $lastMonthEnd);

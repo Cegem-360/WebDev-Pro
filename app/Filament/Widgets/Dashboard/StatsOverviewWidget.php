@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Filament\Widgets\Dashboard;
 
 use App\Enums\PaymentStatuses;
-use App\Enums\PaymentTypes;
 use App\Models\Expense;
 use App\Models\Income;
 use Carbon\Carbon;
@@ -23,29 +22,29 @@ final class StatsOverviewWidget extends BaseWidget
     {
 
         $currentMonth = Carbon::now()->startOfMonth();
-        /*    $paymentType = $this->getData()['payment_type'] ?? null; */
-        $paymentType = PaymentTypes::SINGLE;
-        // Apply payment type filter if specified
+
         $paymentType = $this->filters['payment_type'] ?? null;
 
         $status = $this->filters['payment_status'] ?? PaymentStatuses::PAID;
 
-        $incomeQuery = (int) Income::query()
+        $incomeQuery = Income::query()
             ->whereBetween('payment_date', [
                 $currentMonth,
                 $currentMonth->copy()->endOfMonth(),
             ])
             ->when($paymentType, fn (Builder $query) => $query->wherePaymentType($paymentType))
             ->when($status, fn (Builder $query) => $query->whereStatus($status))
-            ->sum('amount');
-        $expenseQuery = (int) Expense::query()
+            ->pluck('amount')
+            ->sum();
+        $expenseQuery = Expense::query()
             ->whereBetween('payment_date', [
                 $currentMonth,
                 $currentMonth->copy()->endOfMonth(),
             ])
             ->when($paymentType, fn (Builder $query) => $query->wherePaymentType($paymentType))
             ->when($status, fn (Builder $query) => $query->whereStatus($status))
-            ->sum('amount');
+            ->pluck('amount')
+            ->sum();
         // Add payment type info to description
         $balance = $incomeQuery - $expenseQuery;
         $color = $balance >= 0 ? 'success' : 'danger';

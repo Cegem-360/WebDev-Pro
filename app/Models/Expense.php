@@ -10,6 +10,7 @@ use App\Observers\ExpenseObserver;
 use Database\Factories\ExpenseFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,9 +32,9 @@ final class Expense extends Model
 
     public static function getDateBetweenExpense($startDate, $endDate)
     {
-        return (int) (self::whereBetween('payment_date', [$startDate, $endDate])
+        return (int) self::whereBetween('payment_date', [$startDate, $endDate])
             ->whereStatus(PaymentStatuses::PAID)
-            ->sum('amount'));
+            ->sumAmount();
     }
 
     public function category(): BelongsTo
@@ -42,9 +43,21 @@ final class Expense extends Model
     }
 
     #[Scope]
-    public function sumAmount($query): int
+    protected function sumAmount(Builder $query): int
     {
-        return (int) $query->sum('amount');
+        return (int) $query->pluck('amount')->sum();
+    }
+
+    #[Scope]
+    protected function paid(Builder $query): void
+    {
+        $query->whereStatus(PaymentStatuses::PAID);
+    }
+
+    #[Scope]
+    protected function unpaid(Builder $query): void
+    {
+        $query->whereStatus(PaymentStatuses::DRAFT)->orWhere('status', PaymentStatuses::INVOICED)->orWhere('status', PaymentStatuses::PENDING);
     }
 
     protected function casts(): array

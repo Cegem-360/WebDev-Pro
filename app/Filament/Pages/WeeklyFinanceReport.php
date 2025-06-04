@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
-use App\Enums\PaymentStatuses;
 use App\Models\Expense;
 use App\Models\Income;
 use Carbon\Carbon;
@@ -79,13 +78,15 @@ final class WeeklyFinanceReport extends Page
             $startOfWeek = Carbon::now()->copy()->setISODate(Carbon::now()->copy()->year, $weekNumber)->startOfWeek();
             $endOfWeek = $startOfWeek->copy()->endOfWeek();
 
-            // Heti bevétel, kiadás és egyenleg lekérése az adatbázisból
-            /*   $weeklyIncome = Income::getDateBetweenIncome($startOfWeek, $endOfWeek); */
             $weeklyIncome = Income::whereBetween('payment_date', [$startOfWeek, $endOfWeek])
-                ->whereStatus(PaymentStatuses::PAID)
-                ->sum('amount');
+                ->paid()
+                ->pluck('amount')
+                ->sum();
 
-            $weeklyExpense = Expense::getDateBetweenExpense($startOfWeek, $endOfWeek);
+            $weeklyExpense = Expense::whereBetween('payment_date', [$startOfWeek, $endOfWeek])
+                ->paid()
+                ->pluck('amount')
+                ->sum();
 
             $weeklyBalance = $weeklyIncome - $weeklyExpense;
 
