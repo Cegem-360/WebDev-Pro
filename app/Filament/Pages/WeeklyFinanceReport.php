@@ -85,12 +85,6 @@ final class WeeklyFinanceReport extends Page
                 ->whereStatus(PaymentStatuses::PAID)
                 ->sum('amount');
 
-            if ($weekNumber === $currentWeek) {
-                dump(Income::whereBetween('payment_date', [$startOfWeek, $endOfWeek])
-                    ->whereStatus(PaymentStatuses::PAID)
-                    ->toRawSql());
-                dump($startOfWeek, $endOfWeek, $weeklyIncome);
-            }
             $weeklyExpense = Expense::getDateBetweenExpense($startOfWeek, $endOfWeek);
 
             $weeklyBalance = $weeklyIncome - $weeklyExpense;
