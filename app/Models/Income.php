@@ -42,7 +42,7 @@ final class Income extends Model
     #[Scope]
     protected function unpaid(Builder $query): void
     {
-        $query->whereStatus(PaymentStatuses::DRAFT)->orWhereStatus(PaymentStatuses::INVOICED)->orWhereStatus(PaymentStatuses::PENDING);
+        $query->whereStatus(PaymentStatuses::DRAFT)->orWhere('status', PaymentStatuses::INVOICED)->orWhere('status', PaymentStatuses::PENDING);
     }
 
     protected function casts(): array

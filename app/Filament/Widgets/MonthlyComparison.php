@@ -15,91 +15,102 @@ final class MonthlyComparison extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
+        $dateRanges = $this->getDateRanges();
 
-        $currentMonthStart = Carbon::now()->copy()->startOfMonth();
-        $lastMonth = Carbon::now()->copy()->subMonth()->startOfMonth();
-        $lastMonthEnd = $lastMonth->copy()->endOfMonth();
+        // Get aggregated data with single database queries
+        $currentMonthIncome = $this->getMonthlySum(Income::class, $dateRanges['current']);
+        $currentMonthExpense = $this->getMonthlySum(Expense::class, $dateRanges['current']);
+        $lastMonthIncome = $this->getMonthlySum(Income::class, $dateRanges['last']);
+        $lastMonthExpense = $this->getMonthlySum(Expense::class, $dateRanges['last']);
 
-        // Build queries for current month
-        $currentMonthIncomeQuery = Income::query()
-            ->whereBetween('payment_date', [
-                $currentMonthStart,
-                $currentMonthStart->copy()->endOfMonth(),
-            ]);
+        // Calculate changes and determine colors
+        $incomeData = $this->calculateChange($currentMonthIncome, $lastMonthIncome);
+        $expenseData = $this->calculateChange($currentMonthExpense, $lastMonthExpense, true);
 
-        $currentMonthExpenseQuery = Expense::query()
-            ->whereBetween('payment_date', [
-                $currentMonthStart,
-                $currentMonthStart->copy()->endOfMonth(),
-            ]);
-
-        // Build queries for last month
-        $lastMonthIncomeQuery = Income::query()
-            ->whereBetween('payment_date', [
-                $lastMonth,
-                $lastMonthEnd,
-            ]);
-
-        $lastMonthExpenseQuery = Expense::query()
-            ->whereBetween('payment_date', [
-                $lastMonth,
-                $lastMonthEnd,
-            ]);
-
-        // Execute queries
-        $currentMonthIncome = (int) $currentMonthIncomeQuery->pluck('amount')->sum();
-        $currentMonthExpense = (int) $currentMonthExpenseQuery->pluck('amount')->sum();
-        $lastMonthIncome = (int) $lastMonthIncomeQuery->pluck('amount')->sum();
-        $lastMonthExpense = (int) $lastMonthExpenseQuery->pluck('amount')->sum();
-
-        // Calculate percentage changes with better handling of edge cases
-        $incomeChange = 0;
-        if ($lastMonthIncome > 0) {
-            $incomeChange = round((($currentMonthIncome - $lastMonthIncome) / $lastMonthIncome) * 100, 0);
-        } elseif ($currentMonthIncome > 0) {
-            $incomeChange = 100; // New income when there was none before
-        }
-
-        $expenseChange = 0;
-        if ($lastMonthExpense > 0) {
-            $expenseChange = round((($currentMonthExpense - $lastMonthExpense) / $lastMonthExpense) * 100, 0);
-        } elseif ($currentMonthExpense > 0) {
-            $expenseChange = 100; // New expenses when there were none before
-        }
-
-        // Calculate colors based on financial perspective
-        $incomeColor = $incomeChange >= 0 ? 'success' : 'danger';
-        $expenseColor = $expenseChange <= 0 ? 'success' : 'danger';
+        $savings = $currentMonthIncome - $currentMonthExpense;
 
         return [
-            Stat::make('Bevételek változása', Number::currency($currentMonthIncome, 'HUF', 'hu', 0))
-                ->description($incomeChange >= 0
-                    ? ':percent% növekedés az előző hónaphoz képest'
-                    : ':percent% csökkenés az előző hónaphoz képest', ['percent' => abs($incomeChange)]
-                )
-                ->descriptionIcon($incomeChange >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
-                ->color($incomeColor)
-                ->chart([
-                    $lastMonthIncome / 1000,
-                    $currentMonthIncome / 1000,
-                ]),
-
-            Stat::make('Kiadások változása', Number::currency($currentMonthExpense, 'HUF', 'hu', 0))
-                ->description($expenseChange <= 0
-                    ? ':percent% csökkenés az előző hónaphoz képest'
-                    : ':percent% növekedés az előző hónaphoz képest', ['percent' => abs($expenseChange)]
-                )
-                ->descriptionIcon($expenseChange <= 0 ? 'heroicon-m-arrow-trending-down' : 'heroicon-m-arrow-trending-up')
-                ->color($expenseColor)
-                ->chart([
-                    $lastMonthExpense / 1000,
-                    $currentMonthExpense / 1000,
-                ]),
-
-            Stat::make('Megtakarítás', Number::currency($currentMonthIncome - $currentMonthExpense, 'HUF', 'hu', 0))
-                ->description(Carbon::now()->translatedFormat('F'))
-                ->descriptionIcon('heroicon-m-banknotes')
-                ->color(($currentMonthIncome - $currentMonthExpense) >= 0 ? 'success' : 'danger'),
+            $this->createIncomeStat($currentMonthIncome, $incomeData),
+            $this->createExpenseStat($currentMonthExpense, $expenseData),
+            $this->createSavingsStat($savings),
         ];
+    }
+
+    private function getDateRanges(): array
+    {
+        $now = Carbon::now();
+        $currentMonthStart = $now->copy()->startOfMonth();
+        $lastMonthStart = $now->copy()->subMonth()->startOfMonth();
+
+        return [
+            'current' => [$currentMonthStart, $currentMonthStart->copy()->endOfMonth()],
+            'last' => [$lastMonthStart, $lastMonthStart->copy()->endOfMonth()],
+        ];
+    }
+
+    private function getMonthlySum(string $model, array $dateRange): int
+    {
+        return (int) $model::query()
+            ->whereBetween('payment_date', $dateRange)
+            ->sum('amount');
+    }
+
+    private function calculateChange(int $current, int $previous, bool $isExpense = false): array
+    {
+        $change = 0;
+        if ($previous > 0) {
+            $change = round((($current - $previous) / $previous) * 100, 0);
+        } elseif ($current > 0) {
+            $change = 100;
+        }
+
+        // For expenses, lower is better; for income, higher is better
+        $isPositive = $isExpense ? $change <= 0 : $change >= 0;
+
+        return [
+            'change' => $change,
+            'color' => $isPositive ? 'success' : 'danger',
+            'previous' => $previous,
+        ];
+    }
+
+    private function createIncomeStat(int $currentIncome, array $incomeData): Stat
+    {
+        return Stat::make('Bevételek változása', Number::currency($currentIncome, 'HUF', 'hu', 0))
+            ->description($incomeData['change'] >= 0
+                ? ':percent% növekedés az előző hónaphoz képest'
+                : ':percent% csökkenés az előző hónaphoz képest',
+                ['percent' => abs($incomeData['change'])]
+            )
+            ->descriptionIcon($incomeData['change'] >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
+            ->color($incomeData['color'])
+            ->chart([
+                $incomeData['previous'] / 1000,
+                $currentIncome / 1000,
+            ]);
+    }
+
+    private function createExpenseStat(int $currentExpense, array $expenseData): Stat
+    {
+        return Stat::make('Kiadások változása', Number::currency($currentExpense, 'HUF', 'hu', 0))
+            ->description($expenseData['change'] <= 0
+                ? ':percent% csökkenés az előző hónaphoz képest'
+                : ':percent% növekedés az előző hónaphoz képest',
+                ['percent' => abs($expenseData['change'])]
+            )
+            ->descriptionIcon($expenseData['change'] <= 0 ? 'heroicon-m-arrow-trending-down' : 'heroicon-m-arrow-trending-up')
+            ->color($expenseData['color'])
+            ->chart([
+                $expenseData['previous'] / 1000,
+                $currentExpense / 1000,
+            ]);
+    }
+
+    private function createSavingsStat(int $savings): Stat
+    {
+        return Stat::make('Megtakarítás', Number::currency($savings, 'HUF', 'hu', 0))
+            ->description(Carbon::now()->translatedFormat('F'))
+            ->descriptionIcon('heroicon-m-banknotes')
+            ->color($savings >= 0 ? 'success' : 'danger');
     }
 }
