@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Widgets\FinancialReport;
 
-use App\Enums\PaymentStatuses;
 use App\Models\Expense;
 use App\Models\Income;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -32,11 +31,10 @@ final class FinancialReportOverview extends BaseWidget
                 fn ($query, $month) => $query->whereMonth('created_at', $month)
             );
 
-        $expenseQuery = Expense::query()
-            ->when(
-                $this->filters['year'] ?? null,
-                fn ($query, $year) => $query->whereYear('created_at', $year)
-            )
+        $expenseQuery = Expense::when(
+            $this->filters['year'] ?? null,
+            fn ($query, $year) => $query->whereYear('created_at', $year)
+        )
             ->when(
                 $this->filters['month'] ?? null,
                 fn ($query, $month) => $query->whereMonth('created_at', $month)
@@ -49,8 +47,8 @@ final class FinancialReportOverview extends BaseWidget
         // Apply status filters on top of payment type filter
         $paidIncome = (clone $incomeQuery)->paid()->pluck('amount')->sum();
         $unpaidIncome = (clone $incomeQuery)->unpaid()->pluck('amount')->sum();
-        $paidExpense = (clone $expenseQuery)->whereStatus(PaymentStatuses::PAID)->pluck('amount')->sum();
-        $unpaidExpense = (clone $expenseQuery)->whereStatus(PaymentStatuses::DRAFT)->pluck('amount')->sum();
+        $paidExpense = (clone $expenseQuery)->paid()->pluck('amount')->sum();
+        $unpaidExpense = (clone $expenseQuery)->unpaid()->pluck('amount')->sum();
 
         $netBalance = $totalIncome - $totalExpense;
 

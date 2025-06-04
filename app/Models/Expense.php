@@ -34,18 +34,12 @@ final class Expense extends Model
     {
         return (int) self::whereBetween('payment_date', [$startDate, $endDate])
             ->whereStatus(PaymentStatuses::PAID)
-            ->sumAmount();
+            ->pluck('amount')->sum();
     }
 
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
-    }
-
-    #[Scope]
-    protected function sumAmount(Builder $query): int
-    {
-        return (int) $query->pluck('amount')->sum();
     }
 
     #[Scope]
@@ -57,7 +51,7 @@ final class Expense extends Model
     #[Scope]
     protected function unpaid(Builder $query): void
     {
-        $query->whereStatus(PaymentStatuses::DRAFT)->orWhere('status', PaymentStatuses::INVOICED)->orWhere('status', PaymentStatuses::PENDING);
+        $query->whereStatus(PaymentStatuses::DRAFT)->orWhereStatus(PaymentStatuses::INVOICED)->orWhereStatus(PaymentStatuses::PENDING);
     }
 
     protected function casts(): array

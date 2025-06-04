@@ -47,14 +47,10 @@ final class MonthlyComparison extends StatsOverviewWidget
             ]);
 
         // Execute queries
-        $currentMonthIncome = (int) $currentMonthIncomeQuery->sumAmount();
-        $currentMonthExpense = (int) $currentMonthExpenseQuery->sumAmount();
-        $lastMonthIncome = (int) $lastMonthIncomeQuery->sumAmount();
-        $lastMonthExpense = (int) $lastMonthExpenseQuery->sumAmount();
-
-        // We already have the data from our queries, so remove the duplicate calls
-        // $lastMonthIncome = Income::getDateBetweenIncome($lastMonth, $lastMonthEnd);
-        // $lastMonthExpense = Expense::getDateBetweenExpense($lastMonth, $lastMonthEnd);
+        $currentMonthIncome = (int) $currentMonthIncomeQuery->pluck('amount')->sum();
+        $currentMonthExpense = (int) $currentMonthExpenseQuery->pluck('amount')->sum();
+        $lastMonthIncome = (int) $lastMonthIncomeQuery->pluck('amount')->sum();
+        $lastMonthExpense = (int) $lastMonthExpenseQuery->pluck('amount')->sum();
 
         // Calculate percentage changes with better handling of edge cases
         $incomeChange = 0;

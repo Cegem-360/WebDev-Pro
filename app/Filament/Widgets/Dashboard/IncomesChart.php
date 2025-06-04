@@ -87,7 +87,7 @@ final class IncomesChart extends ChartWidget
                 ->when($paymentType, fn (Builder $query) => $query->wherePaymentType($paymentType))
                 ->when($status, fn (Builder $query) => $query->whereStatus($status));
 
-            $dayIncome = $query->sumAmount();
+            $dayIncome = $query->pluck('amount')->sum();
 
             $amounts->push($dayIncome);
 
