@@ -45,7 +45,7 @@ final class WeeklyFinanceReport extends Page
 
     protected static ?string $title = 'Heti pénzügyi jelentés';
 
-    protected static string $view = 'filament.pages.weekly-finance-report';
+    protected static string $view = 'Filament.pages.weekly-finance-report';
 
     public function mount(): void
     {

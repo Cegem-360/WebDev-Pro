@@ -24,7 +24,7 @@ final class FinancialStats extends Page
     /**
      * @var view-string
      */
-    protected static string $view = 'filament.pages.financial-stats';
+    protected static string $view = 'Filament.pages.financial-stats';
 
     public function getTitle(): string|Htmlable
     {

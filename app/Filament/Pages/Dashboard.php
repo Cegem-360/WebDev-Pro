@@ -12,7 +12,6 @@ use App\Filament\Widgets\Dashboard\StatsOverviewWidget;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
-use Filament\Pages\Dashboard\Actions\FilterAction;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Pages\Dashboard\Concerns\HasFiltersAction;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
@@ -52,15 +51,6 @@ final class Dashboard extends BaseDashboard
         return self::$routePath;
     }
 
-    /*   public function getHeaderWidgets(): array
-      {
-          return [
-              ExpensesChart::class,
-              IncomesChart::class,
-              StatsOverviewWidget::class,
-          ];
-      } */
-
     /**
      * @return array<class-string<Widget> | WidgetConfiguration>
      */
@@ -80,17 +70,6 @@ final class Dashboard extends BaseDashboard
             StatsOverviewWidget::class,
         ];
     }
-
-    /**
-     * @return array<string, mixed>
-     */
-    /* public function getWidgetData(): array
-    {
-        return [
-            'payment_type' => $this->filters['payment_type'],
-            'payment_status' => $this->filters['payment_status'],
-        ];
-    } */
 
     /**
      * @return int | string | array<string, int | string | null>
@@ -122,19 +101,4 @@ final class Dashboard extends BaseDashboard
             ])
             ->columns(1);
     }
-
-    /* protected function getHeaderActions(): array
-    {
-        return [
-            FilterAction::make()
-                ->form([
-                    Select::make('payment_type')
-                        ->label('Fizetési mód')
-                        ->options(PaymentTypes::class),
-                    Select::make('payment_status')
-                        ->label('Fizetési státusz')
-                        ->options(PaymentStatuses::class),
-                ]),
-        ];
-    } */
 }
