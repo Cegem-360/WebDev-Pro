@@ -113,7 +113,6 @@ final class WeeklyFinanceReport extends Page
     protected function applySearch(): void
     {
         $this->filteredWeeks = collect($this->weeks);
-        dump($this->weeks[22]);
         // Szűrés keresés alapján
         if ($this->search > 0) {
             $searchTerm = (int) $this->search;
@@ -133,7 +132,6 @@ final class WeeklyFinanceReport extends Page
                 return $weekStartDate->month === $month || $weekEndDate->month === $month;
             });
         }
-        dump($this->weeks[22]);
         // Összesítés kiszámolása
         $this->totalIncome = $this->filteredWeeks->sum('income');
         $this->totalExpense = $this->filteredWeeks->sum('expense');

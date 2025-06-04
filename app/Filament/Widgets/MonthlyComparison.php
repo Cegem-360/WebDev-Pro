@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Widgets;
 
-use App\Enums\PaymentTypes;
 use App\Models\Expense;
 use App\Models\Income;
 use Carbon\Carbon;
@@ -16,8 +15,7 @@ final class MonthlyComparison extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
-        $paymentType = PaymentTypes::SINGLE;
-        /*   $paymentType = $this->getData()['payment_type'] ?? null; */
+
         $currentMonthStart = Carbon::now()->copy()->startOfMonth();
         $lastMonth = Carbon::now()->copy()->subMonth()->startOfMonth();
         $lastMonthEnd = $lastMonth->copy()->endOfMonth();
@@ -48,14 +46,6 @@ final class MonthlyComparison extends StatsOverviewWidget
                 $lastMonthEnd,
             ]);
 
-        // Apply payment type filter if specified
-        if ($paymentType) {
-            $currentMonthIncomeQuery->where('payment_type', $paymentType);
-            $currentMonthExpenseQuery->where('payment_type', $paymentType);
-            $lastMonthIncomeQuery->where('payment_type', $paymentType);
-            $lastMonthExpenseQuery->where('payment_type', $paymentType);
-        }
-
         // Execute queries
         $currentMonthIncome = (int) $currentMonthIncomeQuery->sum('amount');
         $currentMonthExpense = (int) $currentMonthExpenseQuery->sum('amount');
@@ -85,11 +75,8 @@ final class MonthlyComparison extends StatsOverviewWidget
         $incomeColor = $incomeChange >= 0 ? 'success' : 'danger';
         $expenseColor = $expenseChange <= 0 ? 'success' : 'danger';
 
-        // Add payment type info to title
-        $filterInfo = $paymentType ? ' ('.($paymentType === 'recurring' ? 'Ismétlődő' : 'Egyszeri').')' : '';
-
         return [
-            Stat::make('Bevételek változása'.$filterInfo, Number::currency($currentMonthIncome, 'HUF', 'hu', 0))
+            Stat::make('Bevételek változása', Number::currency($currentMonthIncome, 'HUF', 'hu', 0))
                 ->description($incomeChange >= 0
                     ? ':percent% növekedés az előző hónaphoz képest'
                     : ':percent% csökkenés az előző hónaphoz képest', ['percent' => abs($incomeChange)]
@@ -101,7 +88,7 @@ final class MonthlyComparison extends StatsOverviewWidget
                     $currentMonthIncome / 1000,
                 ]),
 
-            Stat::make('Kiadások változása'.$filterInfo, Number::currency($currentMonthExpense, 'HUF', 'hu', 0))
+            Stat::make('Kiadások változása', Number::currency($currentMonthExpense, 'HUF', 'hu', 0))
                 ->description($expenseChange <= 0
                     ? ':percent% csökkenés az előző hónaphoz képest'
                     : ':percent% növekedés az előző hónaphoz képest', ['percent' => abs($expenseChange)]
@@ -113,7 +100,7 @@ final class MonthlyComparison extends StatsOverviewWidget
                     $currentMonthExpense / 1000,
                 ]),
 
-            Stat::make('Megtakarítás'.$filterInfo, Number::currency($currentMonthIncome - $currentMonthExpense, 'HUF', 'hu', 0))
+            Stat::make('Megtakarítás', Number::currency($currentMonthIncome - $currentMonthExpense, 'HUF', 'hu', 0))
                 ->description(Carbon::now()->translatedFormat('F'))
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color(($currentMonthIncome - $currentMonthExpense) >= 0 ? 'success' : 'danger'),
