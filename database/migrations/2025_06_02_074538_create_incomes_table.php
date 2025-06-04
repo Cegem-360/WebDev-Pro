@@ -20,7 +20,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Category::class)->nullable()->cascadeOnUpdate()->nullOnDelete();
             $table->date('payment_date');
-            $table->text('description');
+            $table->text('description')->nullable();
             $table->integer('amount');
             $table->integer('recurring_times')
                 ->default(1)
